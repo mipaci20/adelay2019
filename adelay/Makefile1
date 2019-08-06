@@ -1,0 +1,45 @@
+#
+#    Makefile for Avatar
+#
+
+# TRACER FLAGS
+TRACER = 
+
+INCLUDE_PATH = -I/home/hgs/src/nevot/include
+
+# Other constants
+CONST =
+
+FLAGS = -Wall -Wstrict-prototypes -Wmissing-prototypes \
+	-Wcast-qual -Wcast-align -finline-functions -g
+
+LIB_PATH = -L/home/hgs/src/nevot/sun5 -L/usr/demo/SOUND/lib/
+
+CC = gcc ${FLAGS} $(TRACER) $(CONST)
+
+LIB = $(LIB_PATH) -lm -lnetutil -laudio
+
+OBJS = fft.o aufileutil.o
+
+TESTS = fft.t 
+TARFILE = faq setup.gif setup.fig
+ARCHIVE = adelay1.tar.gz
+ALL =  adelay1
+
+all : $(ALL)
+
+adelay1 : adelay1.c $(OBJS)
+	$(CC) $(INCLUDE_PATH) -o adelay1 $(OBJS) $< $(LIB)
+
+%.o : %.c
+	$(CC) $(INCLUDE_PATH) -c $<
+
+fft.t : fft.t.c fft.o
+	$(CC) -o $@ fft.o $@.c $(LIB)
+
+tar:
+	tar cvf - *.[hc] Makefile *.dat *.data | \
+	gzip -c > $(ARCHIVE)
+
+clean :
+	- /bin/rm -f *.o $(TESTS) $(ALL) a.out core

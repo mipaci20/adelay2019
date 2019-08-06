@@ -1,0 +1,305 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>adelay - measure the delay between two audio channels</title>
+<meta name="author" content="Hao Huang; Henning Schulzrinne">
+<meta name="keywords" content="audio delay">
+<meta name="description" content="Audio signal delay measurement using
+cross-correlation.">
+</head>
+<body bgcolor=white>
+
+<h2>Name</h2>
+
+<blockquote>
+<tt>adelay</tt> - measure the delay between two audio channels
+</blockquote>
+
+<h2>Synopsis</h2>
+
+<blockquote>
+<tt>adelay 
+[-hd]
+[-e PCMU|PCMA|L16]
+[-f <i>samplerate</i>]
+[-p <i>period</i>]
+[-s <i>skip</i>]
+[-t <i>time</i>] 
+[-i <i>in</i>]
+[-o <i>out</i>] 
+</tt>
+</blockquote>
+
+<h2>Availability</h2>
+
+<blockquote>
+<p>Source is available at <a
+href="http://www.cs.columbia.edu/~hgs/adelay/src/">http://www.cs.columbia.edu/~hgs/adelay/src/</a>
+
+<p>Currently, only Sun audio files and the Sun audio devices are supported.
+</blockquote>
+
+<h2>Description</h2>
+
+<blockquote>
+<p>The <tt>adelay</tt> utility is an audio signal delay analyzer.  It
+reads the data from the input device or a file, calculates correlation
+between the two channels using FFT, and reports the delay between them. 
+
+<p>In correlation, we compare two sets of data directly superposed, and
+with one of them shifted left or right.  The relation that holds when
+two functions, <i>g(t)</i> and <i>h(t)</i>, are interchanged is: 
+<center>
+Corr<i>(g,h)(t)</i> = Corr<i>(h,g)(-t)</i>
+</center>
+
+<p>The discrete correlation of two sampled functions
+<i>g<sub>k</sub></i> and <i>h<sub>k</sub></i>, each periodic with period
+<i>N</i>, is defined by
+<center>
+Corr<i>(g,h)[j]</i> = Sum [<i>k</i>=0 to <i>N</i>-1](<i>g[j+k]</i> + <i>h[k]</i>) 
+</center>
+The discrete correlation theorem says that this discrete correlation of
+two real functions <i>g</i> and <i>h</i> is one member of the
+discrete Fourier transform pair
+<center>
+Corr<i>(g,h)[j]</i> <==> <i>G<sub>k</sub>H<sub>k</sub>*</i>
+</center>
+
+<p>We can compute correlation using an FFT as follows:  compute the FFT
+for the two data sets, multiply one resulting transform by the complex
+conjugate of the other, and compute the inverse transform of the
+product.  The result, say <i>r</i>, will formally be a complex vector of
+length <i>N</i> with all its imaginary parts zero since the original
+data sets were both real.  The components of <i>r</i> are the values of
+the correlation at different lags. 
+
+<p>When the delay is more then half of the length of the collected
+sample, the results tend to vary.  Normally, more than half of them are
+correct.  Most incorrect results fluctuate near 0 (no delay) as the two
+set of data are considered unrelated.  Specify larger sampling time if
+results jump between a long delay and 0. 
+
+</blockquote>
+
+<h2>Options</h2>
+
+<blockquote>
+<table>
+<tr>
+<td valign=top><tt>-h</tt>
+<td valign=top>Print a short description of the usage.
+
+<tr>
+<td valign=top><tt>-d</tt>
+<td valign=top>Print out decoded data in addition to the correlation when -o is
+specified. 
+
+<tr>
+<td valign=top><tt>-e PCMU|PCMA|L16</tt>
+<td valign=top>Specify the encoding of the audio input.  Currently, delay supports
+PCMU (U-law), PCMA (A-law) and L16 (Linear 16-bit signed).  The default
+encoding is L16.  This option has no effect when reading from file
+because the file header provides encoding information. 
+
+<tr>
+<td valign=top><tt>-f</tt> <i>samplerate</i>
+<td valign=top>Sampling frequency in Hz.  The default is 8000 Hz.  This option has
+no effect when reading from file because the file header provides frequency
+information. 
+
+<tr>
+<td valign=top><tt>-p</tt> <i>period</i>
+<td valign=top>Period for checking delay.  When reading data from audio input
+device, the program can check the delay periodically.  The default is 60
+sec.  Use 0 or less to suppress looping (run only once).  This option
+has no effect when reading from file because the program is only run
+once in that case. 
+
+<tr>
+<td valign=top><tt>-s</tt> <i>skip</i>
+<td valign=top>Skip first seconds of data when reading from file.  The default is
+0.  This option has no effect when reading from audio input device. 
+
+<tr>
+<td valign=top><tt>-t</tt> <i>time</i>
+<td valign=top>Sampling time in seconds.  The default is 2 seconds.  The FFT
+library requires the size of the data set to be power of 2.  Therefore,
+the delay program automatically reads in data of length that is power of
+2 and just above the specified length.  If the delay is larger than the
+half of the sampling length, the results tend to vary.  Normally, more
+than half of them are correct.  Most incorrect results fluctuate near 0
+(no delay) as the two set of data are considered unrelated.  Specify
+larger sampling time if results jump between long time and 0. 
+
+<tr>
+<td valign=top><tt>-i</tt> <i>in</i>
+<td valign=top>Read from the given audio file.  The file must be a Sun audio (.au)
+file.  By default, the program reads from audio input device. Reading
+from the audio device is currently only supported for Sun systems.
+
+<tr>
+<td valign=top><tt>-o</tt> <i>out</i>
+<td valign=top>Output the delay correlation pairs to file out.  Use "-" for stdout. 
+By default, this program does not output this data.  This option has no
+effect if this program loops for checking delay from audio input device. 
+
+</table>
+</blockquote>
+
+<h2>Output</h2>
+
+<blockquote>
+<p>This program simply print out the delay between the two channels.
+
+<p>When the <tt>-o</tt> option is specified, the output has following format: 
+<pre>
+Lag (msec)      Correlation 
+-1024.000000    -1.408000e+03 
+-1023.875000    -2.560000e+02 
+-1023.750000    1.220000e+02 
+</pre>
+<p>If, in addition to the <tt>-o</tt> option, the <tt>-d</tt> option is
+also specified, the output is in following format: 
+<pre>
+Lag (msec)      Correlation     Left Channel    Right Channel 
+-1024.000000    -1.408000e+03   0.000000e+00    0.000000e+00 
+-1023.875000    -2.560000e+02   0.000000e+00    0.000000e+00 
+-1023.750000    1.220000e+02    0.000000e+00    0.000000e+00 
+</pre>
+
+</blockquote>
+
+<h2>Examples</h2>
+
+<blockquote>
+Reads from a recorded audio file "data.au" and analyze delay:
+<pre>
+  delay -i data.au
+</pre>
+Reads from a recorded audio file "data.au", analyzes delay, and 
+print out the correlation to file "result":
+<pre>
+  delay -i data.au -o result
+</pre>
+Reads from a recorded audio file "data.au", analyzes delay, print 
+out the correlation along with decoded data to standard output, 
+and observe them with pager: 
+<pre>
+  delay -d -i data.au -o - | more 
+</pre>
+Reads from the audio input device with all default values:
+<pre>
+  delay
+</pre>
+Reads from the audio input device, calculates only once:
+<pre>
+  delay -p 0
+</pre>
+Reads from the audio input device with U-law encoding:
+<pre>
+  delay -e PCMU
+</pre>
+</blockquote>
+
+<h2>Exit Status</h2>
+
+<blockquote>
+The following exit values are returned:
+
+<table>
+<tr>
+<td>0
+<td>The program terminated successfully.
+
+<tr>
+<td>>0
+<td>An error occurred.
+</table>
+</blockquote>
+
+<h2>Notes</h2>
+<blockquote>
+<p>This program can be used to measure one-way internet delay.  Split
+one audio signal into two channels, one transmitted by telephone network
+and the other by internet.  The receiver connect these channels to the
+audio input of the computer, the first channel to the left and the
+second to the right.  The result from the program is then the one-way
+internet delay compared to the telephone switch network transmission. 
+
+<center>
+<img alt="Wiring for measuring delays" src="setup.gif">
+</center>
+</blockquote>
+
+<h2>Installation</h2>
+<blockquote>
+</blockquote>
+
+
+<h2>See Also</h2>
+
+<blockquote>
+<ul>
+<li><a href="report.html">Project report</a>
+
+<li>William H.  Press, <i>et.  al.</i>, <i>Numerical Recipes In C -- the
+Art of Scientific Computing</i>, Cambridge University Press, 1988. 
+
+<li><a href="ftp://ftp.cwi.nl/pub/audio/AudioFormats.part2">Audio Format
+FAQ, Part 1</a>
+
+<li><a href="ftp://ftp.cwi.nl/pub/audio/AudioFormats.part2">Audio Format
+FAQ, Part 2</a>
+
+</ul>
+</blockquote>
+
+<h2>Authors</h2>
+
+<blockquote>
+<a href="mailto:huangha@flux.cpmc.columbia.edu">Hao Huang</a>,
+<a href="http://www.cs.columbia.edu">Columbia University</a>
+</blockquote>
+
+<h2>Acknowledgment</h2>
+
+<blockquote>
+I would like to thank Jonathan Lennox for his help and advice.  I would
+also like to thank Prof.  Henning Schulzrinne for giving me this
+opportunity, for his guidance, and for his kind consideration for my
+medical condition during this project. 
+</blockquote>
+
+<h2>Copyright</h2>
+
+<blockquote>
+<p>Copyright 1998 by Columbia University; all rights reserved
+
+<small>
+<p>Permission to use, copy, modify, and distribute this software and its
+documentation for research and educational purpose and without fee is
+hereby granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and warranty disclaimer
+appear in supporting documentation, and that the names of the copyright
+holders or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific, written
+prior permission.  Use of this software in whole or in parts for direct
+commercial advantage requires explicit prior permission.
+
+<p>The copyright holders disclaim all warranties with regard to this
+software, including all implied warranties of merchantability and
+fitness.  In no event shall the copyright holders be liable for any
+special, indirect or consequential damages or any damages whatsoever
+resulting from loss of use, data or profits, whether in an action of
+contract, negligence or other tortuous action, arising out of or in
+connection with the use or performance of this software.
+</small>
+</blockquote>
+
+<hr>
+Last modified: 1998-07-18 by <a
+href="http://www.cs.columbia.edu/~hgs">Henning Schulzrinne</a>
+
+</body>
+</html>

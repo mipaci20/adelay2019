@@ -1,0 +1,346 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="author" CONTENT="Hao Huang">
+   <META NAME="keywords" CONTENT="Audio; Delay; FFT;">
+   <META NAME="description" CONTENT="Audio signal delay analysis.">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Hao Huang">
+   <META NAME="Description" CONTENT="Audio signal delay analysis.">
+   <META NAME="KeyWords" CONTENT="Audio; Delay; FFT;">
+   <TITLE>Audio Delay Manual</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<CENTER>
+<H1>
+Audio Signal Delay Project</H1></CENTER>
+
+<CENTER>
+<ADDRESS>
+<A HREF="http://www.cpmc.columbia.edu/~huangha">Hao Huang</A></ADDRESS></CENTER>
+
+<CENTER>Columbia University</CENTER>
+
+<CENTER>Ft. Washington Ave., AP-1310</CENTER>
+
+<CENTER>New York, NY 10032</CENTER>
+
+<CENTER>USA</CENTER>
+
+<CENTER><A HREF="mailto:huangha@flux.cpmc.columbia.edu">huangha@flux.cpmc.columbia.edu</A></CENTER>
+
+<H2>
+Abstract</H2>
+The main aim of this project is to build an analyzer for measuring the
+delay between the two channels of the audio input, using the Fast Fourier
+Transform (FFT) correlation function.&nbsp; Given a signal from the phone
+line and a signal transmitted over the Internet, this analyzer also provides
+the ability to measure one-way delay.
+<H2>
+<B>Requirements</B></H2>
+The analyzer, including the FFT library, were written in C and compiled
+with gcc. The FFT library is based on <I>Numeric Recipe in C </I>by <I>W.
+H. Press et al</I>.
+
+<P>The analyzer utilizes the standard math library and the netutil library
+of Prof. <I><A HREF="http://www.cs.columbia.edu/~hgs">Henning Schulzrinne'</A></I>s
+research group in the ~hgs/src/nevot/sun5 directory on Columbia CS cluster,
+which in turn, requires the audio library provided by Sun in the /usr/demo/SOUND/lib/
+directory on Columbia CS cluster.&nbsp;&nbsp; Change the Makefile if the
+directories on your machine are different.
+
+<P>The package utilizes the netutil library and its system-dependency is
+limited by that library.&nbsp; Currently, the package only supports U-law,
+A-law, 8-bit linear, 16-bit linear and 32-bit linear encoding (all linear
+data are treated as signed).&nbsp; Users can write decoding block in the
+decodeAudioData function in aufileutil.c to support other encoding if desired.
+<H2>
+Installation</H2>
+Download the archive <A HREF="delay.tar.gz">here</A>.
+
+<P>Uncompress the archive with gzip and tar. Edit Makefile if&nbsp; necessary.&nbsp;
+Type "make" and make the program delay.&nbsp; To make the test driver for
+FFT library, use "make fft.t".
+<H2>
+Operation</H2>
+<B><TT>delay&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+User Commands&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+delay</TT></B>
+<BR>&nbsp;
+
+<P><B><TT>NAME</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; delay - measure the delay between two audio
+channels</TT>
+
+<P><B><TT>SYNOPSIS</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; delay [-hd] [-e ##] [-f ##] [-p ##] [-s ##]
+[-t ##] [-i in] [-o out]</TT>
+
+<P><B><TT>DESCRIPTION</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; The delay utility is an audio signal delay analyzer.&nbsp;
+It reads</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; the data from the input device or a file, calculates
+correlation</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; between the two channels using FFT, and report
+the delay between</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; them.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; In correlation, we compare two sets of data directly
+superposed,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; and with one of them shifted left or right.&nbsp;&nbsp;
+The relation that</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; holds when two functions, <I>g</I>(t) and <I>h</I>(<I>t</I>),
+are interchanged is:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Corr(<I>g,h</I>)(<I>t</I>)
+= Corr(<I>h,g</I>)(<I>-t</I>)</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; The discrete correlation of two sampled functions
+<I>g<SUB>k</SUB></I> and <I>h<SUB>k</SUB></I>, each</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; periodic with period <I>N</I>, is defined by</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Corr(<I>g,h</I>)[<I>j</I>]
+= Sum[<I>k</I>=0 to <I>N</I>-1](<I>g</I>[<I>j+k</I>] + <I>h</I>[<I>k</I>])</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; The <I>discrete correlation theorem</I> says
+that this discrete correlation</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; of two real functions <I>g</I> and <I>h</I>
+is one member of the discrete Fourier</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; transform pair</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Corr(<I>g,h</I>)[<I>j</I>]
+&lt;==> <I>G<SUB>k</SUB>H<SUB>k</SUB></I>*</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; We can compute correlation using FFT as follows:
+FFT the two data</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; sets, multiply one resulting transform by the
+complex conjugate</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; of the other, and inverse transform the product.&nbsp;
+The result, say</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; <I>r</I>, will formally be a complex vector
+of length N with all its</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; imaginary parts zero since the original data
+sets were both real.</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; The components of <I>r</I> are the values of
+the correlation at different</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; lags.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; When the delay is more then half of the length
+of the collected</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; sample, the results tend to vary.&nbsp; Normally,
+more than half of</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; them are correct.&nbsp; Most incorrect results
+fluctuate near 0 (no</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; delay) as the two set of data are considered
+unrelated.&nbsp; Specify</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; larger sampling time if results jump between
+long time and 0.</TT>
+
+<P><B><TT>OPTIONS</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; The following options are supported:</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Print a short description of the usage.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -d&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Print out decoded data in addition to the corre-</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+lation when -o is specified.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -e ##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specify the encoding of the audio input. Currently,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+delay supports PCMU(U-law), PCMA(A-law) and L16</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(Linear 16-bit signed).&nbsp; The default encoding is</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L16.&nbsp; This option has no effect when reading from</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+file because the file header provides encoding</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+information.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -f ##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sampling frequency in Hz. The default is 8000 Hz.</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This option has no effect when reading from file</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+because file header provides frequency information.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -p ##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Period for checking delay. When reads data from</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+audio input device, the program can check the</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+delay periodically.&nbsp; The default is 60 sec.&nbsp; Use</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 or less to suppress looping (run only once).</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This option has no effect when reading from file</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+because the program only run once in that case.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -s ##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Skip first seconds of data when reading from file.</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The default is 0.&nbsp; This option has no effect when</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+reading from audio input device.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -t ##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sampling time in seconds.&nbsp; The default is 2 seconds.</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The FFT library requires the size of the data set</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+to be power of 2.&nbsp; Therefore, the delay program</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+automatically reads in data of length that is power</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+of 2 and just above the specified length.&nbsp; If the</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+delay is larger than the half of the sampling length,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+the results tend to vary.&nbsp; Normally, more than half</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+of them are correct.&nbsp; Most incorrect results fluctuate</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+near 0 (no</TT> <TT>delay) as the two set of data are considered</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+unrelated.&nbsp; Specify</TT> <TT>larger sampling time if results</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jump between long time and 0.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -i in&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Read from the given audio file.&nbsp; By default, this</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+program reads from audio input device.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; -o out&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the delay correlation pairs to file out.&nbsp; Use</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"-" for stdout.&nbsp; By default, this program does not</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+output these data.&nbsp; This option has no effect if</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+this program loops for checking delay from audio</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+input device.</TT>
+
+<P><B><TT>OUTPUT</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; This program simply print out the delay between
+the two channels.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; When -o option is specified, the output is in
+following format:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Lag (msec)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Correlation</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1024.000000&nbsp;&nbsp;&nbsp;
+-1.408000e+03</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1023.875000&nbsp;&nbsp;&nbsp;
+-2.560000e+02</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1023.750000&nbsp;&nbsp;&nbsp;
+1.220000e+02</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; If, in addition to -o option, -d option is also
+specified, the</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; output is in following format:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Lag (msec)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Correlation&nbsp;&nbsp;&nbsp;&nbsp; Left Channel&nbsp;&nbsp;&nbsp; Right
+Channel</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1024.000000&nbsp;&nbsp;&nbsp;
+-1.408000e+03&nbsp;&nbsp; 0.000000e+00&nbsp;&nbsp;&nbsp; 0.000000e+00</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1023.875000&nbsp;&nbsp;&nbsp;
+-2.560000e+02&nbsp;&nbsp; 0.000000e+00&nbsp;&nbsp;&nbsp; 0.000000e+00</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1023.750000&nbsp;&nbsp;&nbsp;
+1.220000e+02&nbsp;&nbsp;&nbsp; 0.000000e+00&nbsp;&nbsp;&nbsp; 0.000000e+00</TT>
+
+<P><B><TT>EXAMPLES</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; Reads from a recorded audio file "data.au" and
+analyze delay:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; example% delay -i data.au</TT>
+<BR>&nbsp;
+<BR><TT>&nbsp;&nbsp;&nbsp; Reads from a recorded audio file "data.au",
+analyzes delay, and</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; print out the correlation to file "result":</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; example% delay -i data.au
+-o result</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; Reads from a recorded audio file "data.au", analyzes
+delay, print</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; out the correlation along with decoded data
+to standard output,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; and observe them with pager:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; example% delay -d -i
+data.au -o - | more</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; Reads from the audio input device with all default
+values:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; example% delay</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; Reads from the audio input device, calculates
+only once:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; example% delay -p 0</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; Reads from the audio input device with U-law
+encoding:</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; example% delay -e PCMU</TT>
+
+<P><B><TT>EXIT STATUS</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; The following exit values are returned:</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The program terminates successfully.</TT>
+
+<P><TT>&nbsp;&nbsp;&nbsp; > 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; An error
+occurred.</TT>
+
+<P><B><TT>NOTES</TT></B>
+<BR><TT>&nbsp;&nbsp;&nbsp; This program can be used to measure one-way
+internet delay.</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; Split one audio signal into two channels, one
+transmitted by</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; telephone network and the other by internet.&nbsp;
+The receiver</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; connect these channels to the audio input of
+the computer,</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; the first channel to the left and the second
+to the right.</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; The result from the program is then the one-way
+internet delay</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; compared to the telephone switch network transmission.</TT>
+<H2>
+Setup Diagram</H2>
+
+<CENTER><IMG SRC="setup.gif" HEIGHT=373 WIDTH=593></CENTER>
+
+<H2>
+Acknowledgment</H2>
+I would like to thank Jonathan Lennox for his help and advice.&nbsp; I
+would also like to thank Prof. Henning Schulzrinne for giving me this opportunity,
+for his guidance, and for his kind consideration for my medical condition
+during this project.
+<H2>
+<A NAME="references"></A>References</H2>
+
+<DL compact>
+<DT>
+<A NAME="1"></A>1</DT>
+
+<DD>
+William H. Press, <I>et. al.</I>, <I>Numerical Recipe In C -- the Art of
+Scientific Computing</I>, Cambridge University Press, 1988.</DD>
+
+<DT>
+<A NAME="2"></A>2</DT>
+
+<DD>
+<A HREF="ftp://ftp.cwi.nl/pub/audio/AudioFormats.part1">Audio Format FAQ,
+PART 1</A></DD>
+
+<DT>
+<A NAME="3"></A>3</DT>
+
+<DD>
+<A HREF="ftp://ftp.cwi.nl/pub/audio/AudioFormats.part2">Audio Format FAQ,
+PART 2</A></DD>
+</DL>
+
+<HR>Last updated: 1998-05-13 by <A HREF="http://www.cpmc.columbia.edu/~huangha">Hao
+Huang</A>
+</BODY>
+</HTML>

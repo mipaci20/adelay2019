@@ -1,0 +1,138 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="author" CONTENT="Hao Huang">
+   <META NAME="keywords" CONTENT="Audio; Delay; FFT;">
+   <META NAME="description" CONTENT="Audio signal delay analysis.">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>Audio Delay Project Report</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<CENTER>
+<H1>
+Audio Signal Delay Project</H1></CENTER>
+
+<CENTER>
+<ADDRESS>
+<A HREF="http://www.cpmc.columbia.edu/~huangha">Hao Huang</A></ADDRESS></CENTER>
+
+<CENTER>Columbia University</CENTER>
+
+<CENTER>Ft. Washington Ave., AP-1310</CENTER>
+
+<CENTER>New York, NY 10032</CENTER>
+
+<CENTER>USA</CENTER>
+
+<CENTER><A HREF="mailto:huangha@flux.cpmc.columbia.edu">huangha@flux.cpmc.columbia.edu</A></CENTER>
+
+<H2>
+Abstract</H2>
+The main aim of this project is to build an analyzer for measuring the
+delay between the two channels of the audio input, using the Fast Fourier
+Transform (FFT) correlation function.&nbsp; Given a signal from the phone
+line and a signal transmitted over the Internet, this analyzer also provides
+the ability to measure one-way delay.
+<H2>
+Introduction</H2>
+Audio Signal Delay Analyzer is a tool to measure the delay between the
+signals of the two channels in a stereo audio input.&nbsp; It decodes the
+audio data, calculates the correlation between the signals of the two channels,
+and report the delay.&nbsp; This analyzer can read directly from the audio
+device or a recorded stereo audio file.&nbsp; The supported audio file
+formats include .au, .snd and .aiff files.&nbsp; The supported audio encoding
+are U-law, A-law, 8-bit linear, 16-bit linear and 32-bit linear.
+
+<P>It has been common practice to measure round trip delay in the internet.&nbsp;
+However, there has been difficult to measure the one-way delay in the internet.&nbsp;
+With this analyzer, we can split one audio signal to two channels, one
+transmitted by the telephone network and the other by the internet, and
+measure the delay between these two channels at the receiver machine.&nbsp;
+Because the transmission time by telephone network is stable, we can then
+measure the one way delay from the source to the destination.
+<H2>
+Architecture</H2>
+The delay utility is an audio signal delay analyzer.&nbsp; It reads the
+data from the input device or a file, calculates correlation between the
+two channels using FFT, and report the delay between them.
+
+<P>In correlation, we compare two sets of data directly superposed, and
+with one of them shifted left or right.&nbsp;&nbsp; The relation that holds
+when two functions, <I>g(t) </I>and <I>h(t)</I>, are interchanged is:
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Corr(<I>g,h</I>)(<I>t</I>)
+= Corr(<I>h,g</I>)(<I>-t</I>)
+<BR>The discrete correlation of two sampled functions <I>g<SUB>k</SUB></I><SUB>
+</SUB>and <I>h<SUB>k</SUB></I>, each periodic with period <I>N</I>, is
+defined by
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Corr(<I>g,h</I>)[<I>j</I>]
+= Sum[k=0 to <I>N</I>-1](<I>g</I>[<I>j</I>+<I>k</I>] + <I>h</I>[<I>k</I>])
+<BR>The discrete correlation theorem says that this discrete correlation
+of two real functions <I>g</I> and <I>h</I> is one member of the discrete
+Fourier transform pair
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Corr(<I>g,h</I>)[<I>j</I>]
+&lt;==> <I>G<SUB>k</SUB>H<SUB>k</SUB></I>*
+<BR>We can compute correlation using FFT as follows: FFT the two data sets,
+multiply one resulting transform by the complex conjugate of the other,
+and inverse transform the product.&nbsp; The result, say <I>r</I>, will
+formally be a complex vector of length N with all its imaginary parts zero
+since the original data sets were both real.&nbsp; The components of <I>r</I>
+are the values of the correlation at different lags.
+
+<P>The analyzer consists of the FFT library, Audio File Utility module
+and the main module.
+<H3>
+FFT library</H3>
+It performs Fast Fourier Transform for real data and calculate the correlation
+between two data set.&nbsp; It is based on <I><A HREF="#1">Press &lt;1></A></I>.
+<H3>
+Audio File Utility Module</H3>
+It utilizes the netutil library to parse the audio file header and provides
+facility to print out the information about the audio file.&nbsp; It also
+decodes the audio data read in from the file or the audio input device.&nbsp;
+Currently, it supports U-law, A-law, 8-bit linear, 16-bit linear and 32-bit
+linear.&nbsp; User can extends the capability by providing decoding block
+in the decodeAudioData function.
+<H3>
+Main Module</H3>
+The main module parses command argument and performs specified function.
+<H2>
+Program Documentation</H2>
+The installation is very simple.&nbsp; Follow <A HREF="manual.html">this
+link</A> for installation and operation.
+<H2>
+Acknowledgment</H2>
+I would like to thank Jonathan Lennox for his help and advice.&nbsp; I
+would also like to thank Prof. Henning Schulzrinne for giving me this opportunity,
+for his guidance, and for his kind consideration for my medical condition
+during this project.
+<H2>
+<A NAME="references"></A>References</H2>
+
+<DL compact>
+<DT>
+<A NAME="1"></A>1</DT>
+
+<DD>
+William H. Press, <I>et. al.</I>, <I>Numerical Recipe In C -- the Art of
+Scientific Computing</I>, Cambridge University Press, 1988.</DD>
+
+<DT>
+<A NAME="2"></A>2</DT>
+
+<DD>
+<A HREF="ftp://ftp.cwi.nl/pub/audio/AudioFormats.part1">Audio Format FAQ,
+PART 1</A></DD>
+
+<DT>
+<A NAME="3"></A>3</DT>
+
+<DD>
+<A HREF="ftp://ftp.cwi.nl/pub/audio/AudioFormats.part2">Audio Format FAQ,
+PART 2</A></DD>
+</DL>
+
+<HR>Last updated: 1998-05-13 by <A HREF="http://www.cpmc.columbia.edu/~huangha">Hao
+Huang</A>
+</BODY>
+</HTML>

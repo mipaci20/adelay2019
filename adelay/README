@@ -1,0 +1,27 @@
+Project:	Audio Delay
+Author:		Hao Huang
+Contact:	huangha@flux.cpmc.columbia.edu
+
+System Requirement
+
+	The package is developed on Columbia CS SUN Sparc stations.
+Two libraries must be present.  The first is the netutil library of
+Prof. Henning Schulzrinne's research group.  The default directory is
+/u/kon/hgs/src/nevot/sun5.  The second is audio library provided by the
+Sun demo package.  The default directory is at /usr/demo/SOUND/lib/.
+Change the Makefile if the directories on your machine are different.
+	The package utilizes the netutil library and its system-dependency
+is limited by that library.  Currently, the package only supports U-law, 
+A-law, 8-bit linear, 16-bit linear and 32-bit linear encoding (all linear
+data are treated as signed).  Users can write decoding block in the 
+decodeAudioData function in aufileutil.c to support other encoding if 
+desired.
+
+Installation
+
+	Uncompress the archive with gzip and tar. Edit Makefile if 
+necessary.  Type "make" and make the program delay.  To make the test 
+driver for FFT library, use "make fft.t".
+
+Usage
+	Use -h option to get the options list for delay and fft.t
